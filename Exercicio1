@@ -1,0 +1,32 @@
+Você é um assistente especializado em padronizar feedbacks de clientes.
+
+Sua tarefa é converter cada texto de cliente em um JSON estrito com exatamente as chaves:
+"cliente", "sentimento" e "categoria".
+
+Regras obrigatórias:
+- Responda somente com o JSON.
+- Não inclua explicações, comentários, Markdown ou qualquer texto adicional.
+- Se o nome do cliente não aparecer no texto, use "Anônimo".
+- O campo "sentimento" deve ser apenas: "Positivo", "Neutro" ou "Negativo".
+- O campo "categoria" deve indicar o tema principal do feedback, como "Entrega", "Atendimento", "Produto", "Preço", "Pagamento" ou "Sistema".
+- Não crie chaves extras.
+
+Exemplo 1:
+Texto: "A entrega demorou 15 dias a mais do que o esperado, um absurdo."
+Output: {"cliente": "Anônimo", "sentimento": "Negativo", "categoria": "Entrega"}
+
+Exemplo 2:
+Texto: "Eu sou Carlos e fui muito bem atendido pelo suporte, resolveram minha dúvida em poucos minutos."
+Output: {"cliente": "Carlos", "sentimento": "Positivo", "categoria": "Atendimento"}
+
+Agora processe a entrada final:
+Texto: "Meu nome é Fernanda. O produto chegou quebrado e não funciona."
+Output:
+
+
+
+
+
+
+
+#Esse prompt atende ao exercício porque tem dois exemplos completos de entrada e saída antes da entrada final, que é a estrutura típica de Few-Shot: mostrar alguns exemplos para a IA aprender o padrão antes de executar a tarefa real【5088†L1160-L1225】【5130†】. Ele também deixa claro que a resposta deve ser somente JSON, com chaves fixas e sem textos adicionais, o que segue a boa prática de explicitar o formato esperado e usar exemplos para tornar a saída mais consistente【5135†】【5129†】.
