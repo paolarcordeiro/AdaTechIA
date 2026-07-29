@@ -1,0 +1,205 @@
+from pathlib import Path
+import os
+
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
+
+
+# =========================
+# 1. Carregar arquivo .env
+# =========================
+
+env_path = Path(__file__).with_name(".env")
+dotenv_carregado = load_dotenv(dotenv_path=env_path, override=True)
+
+api_key = os.getenv("GEMINI_API_KEY")
+
+print("Arquivo .env encontrado/carregado?", dotenv_carregado)
+print("GEMINI_API_KEY carregada?", api_key is not None)
+print("Tamanho da chave:", len(api_key or ""))
+
+if not api_key:
+    raise ValueError(
+        "GEMINI_API_KEY não foi carregada. "
+        "Verifique se existe um arquivo .env na mesma pasta do script "
+        "e se ele contém: GEMINI_API_KEY=sua_chave"
+    )
+
+
+# =========================
+# 2. Inicializar cliente
+# =========================
+
+client = genai.Client(api_key=api_key)
+
+modelo = "gemini-3.1-flash-lite"
+
+
+# =========================
+# 3. Exercício 1
+# =========================
+
+prompt_ex1 = "Organize as informações do texto fornecido em JSON."
+
+review_ex1 = (
+    "O produto funciona bem, mas o manual de instruções poderia ser mais claro. "
+    "No geral, é razoável."
+)
+
+instrucoes_ex1 = """
+Você é um padronizador de dados de texto em JSON.
+
+Sua tarefa é converter feedbacks de clientes em um JSON estrito com exatamente estas chaves:
+- cliente
+- sentimento
+- categoria
+
+Regras:
+- Responda somente com o JSON.
+- Não escreva explicações.
+- Não use Markdown.
+- Não crie chaves extras.
+- Se o nome do cliente não aparecer, use "Anônimo".
+- O campo sentimento deve ser apenas: "Positivo", "Neutro" ou "Negativo".
+- O campo categoria deve indicar o principal assunto do feedback.
+
+Utilize o seguinte padrão:
+
+Entrada:
+"O prazo de entrega foi cumprido certinho e o produto veio bem embalado. Muito satisfeito com a compra!"
+Saída:
+{"cliente": "Anônimo", "sentimento": "Positivo", "categoria": "Entrega"}
+
+Entrada:
+"Meu nome é Fernanda Lima. A cobrança da mensalidade veio com valor errado de novo, é a segunda vez que isso acontece."
+Saída:
+{"cliente": "Fernanda Lima", "sentimento": "Negativo", "categoria": "Cobrança"}
+"""
+
+schema_ex1 = {
+    "type": "object",
+    "properties": {
+        "cliente": {
+            "type": "string"
+        },
+        "sentimento": {
+            "type": "string",
+            "enum": ["Positivo", "Neutro", "Negativo"]
+        },
+        "categoria": {
+            "type": "string"
+        }
+    },
+    "required": ["cliente", "sentimento", "categoria"],
+    "additionalProperties": False
+}
+
+
+# =========================
+# 4. Exercício 2
+# =========================
+
+prompt_ex2 = """
+Considere a seguinte frota de caminhões com carga:
+
+3 caminhões, com capacidade de 10, 15 e 20 toneladas.
+
+Carga A: 8 toneladas, prioridade Alta
+Carga B: 12 toneladas, prioridade Média
+Carga C: 18 toneladas, prioridade Baixa
+
+Qual a melhor distribuição das cargas entre os caminhões?
+"""
+
+instrucoes_ex2 = """
+Você é um especialista em logística.
+
+Não dê a resposta final imediatamente.
+Analise a situação passo a passo antes da conclusão.
+
+Siga esta estrutura:
+1. Capacidade total disponível
+2. Peso total das cargas
+3. Verificação de viabilidade
+4. Ordem de prioridade
+5. Restrições de capacidade
+6. Distribuição proposta
+7. Justificativa final
+"""
+
+
+# =========================
+# 5. Exercício 3
+# =========================
+
+prompt_ex3 = """
+Analise a urgência do seguinte ticket:
+
+Ticket: Lentidão na geração do arquivo XYZ no módulo XPTO após atualização da release
+"""
+
+instrucoes_ex3 = """
+Você é um analista de suporte técnico.
+
+Classifique o ticket fornecido em urgência de 1 (Baixa) a 5 (Crítica).
+
+Siga exatamente a estrutura de raciocínio mostrada no exemplo:
+
+Ticket: A importação direta do arquivo XYZ está falhando com erro de processamento
+Impacto no negócio: Alto
+Afeta funcionalidade essencial? Sim
+Usuários afetados: Equipe de Backoffice
+Urgência: 4
+"""
+
+
+# =========================
+# 6. Função de chamada
+# =========================
+
+def gerar_resposta(
+    prompt: str,
+    instrucoes: str,
+    modelo: str,
+    schema: dict | None = None
+) -> str:
+    config_kwargs = {
+        "temperature": 0.0,
+        "system_instruction": instrucoes,
+    }
+
+    if schema is not None:
+        config_kwargs["response_mime_type"] = "application/json"
+        config_kwargs["response_json_schema"] = schema
+
+    resposta = client.models.generate_content(
+        model=modelo,
+        contents=prompt,
+        config=types.GenerateContentConfig(**config_kwargs),
+    )
+
+    return resposta.text
+
+
+# =========================
+# 7. Executar Exercício 1
+# =========================
+
+entrada_final_ex1 = f"""
+{prompt_ex1}
+
+Texto:
+"{review_ex1}"
+
+Output:
+"""
+
+resposta = gerar_resposta(
+    prompt=entrada_final_ex1,
+    instrucoes=instrucoes_ex1,
+    modelo=modelo,
+    schema=schema_ex1
+)
+
+print("resposta:", resposta)
