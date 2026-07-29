@@ -1,1 +1,114 @@
+import os
+from dotenv import load_dotenv
+from google import genai
 
+# Carrega o arquivo .env
+load_dotenv()
+
+# Verifica se a chave existe
+if not (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")):
+    raise ValueError("API key não encontrada. Crie um .env com GEMINI_API_KEY=sua_chave_aqui")
+
+# Cria o cliente
+client = genai.Client()
+
+modelo = "gemini-2.5-flash"
+
+
+def executar(titulo, prompt):
+    print(f"\n===== {titulo} =====")
+    resposta = client.models.generate_content(
+        model=modelo,
+        contents=prompt
+    )
+    print(resposta.text)
+
+
+# EXERCÍCIO 1 - Few-Shot / JSON
+prompt_ex1 = """
+Você é um assistente que transforma feedbacks de clientes em JSON.
+
+Responda somente com um JSON contendo exatamente:
+cliente, sentimento e categoria.
+
+Se o nome do cliente não aparecer, use "Anônimo".
+O sentimento deve ser "Positivo", "Neutro" ou "Negativo".
+
+Exemplo 1:
+Texto: "A entrega demorou 15 dias a mais do que o esperado, um absurdo."
+Output: {"cliente": "Anônimo", "sentimento": "Negativo", "categoria": "Entrega"}
+
+Exemplo 2:
+Texto: "Meu nome é Fernanda Lima. A cobrança veio com valor errado de novo."
+Output: {"cliente": "Fernanda Lima", "sentimento": "Negativo", "categoria": "Cobrança"}
+
+Agora processe:
+Texto: "O produto funciona bem, mas o manual de instruções poderia ser mais claro. No geral, é razoável."
+Output:
+"""
+
+
+# EXERCÍCIO 2 - Chain of Thought / Passo a passo
+prompt_ex2 = """
+Você é um especialista em logística.
+
+Não dê a resposta final de imediato.
+Mostre primeiro o passo a passo da análise.
+
+Recursos e cargas:
+- Temos 3 caminhões com capacidade de 5 toneladas cada.
+- Carga A: 7 toneladas, prioridade Alta
+- Carga B: 4 toneladas, prioridade Média
+- Carga C: 3 toneladas, prioridade Baixa
+
+Analise:
+1. Capacidade total
+2. Peso total das cargas
+3. Viabilidade
+4. Prioridades
+5. Distribuição das cargas
+6. Resposta final
+
+Problema:
+Qual é a melhor distribuição das cargas entre os caminhões?
+"""
+
+
+# EXERCÍCIO 3 - Few-Shot + Chain of Thought
+prompt_ex3 = """
+Você é um analista de suporte técnico.
+
+Classifique a urgência do ticket de 1 a 5:
+1 = Baixa
+2 = Moderada
+3 = Alta
+4 = Muito Alta
+5 = Crítica
+
+Siga o formato dos exemplos.
+
+Exemplo 1:
+Ticket: "Não consigo alterar minha foto de perfil no painel."
+Raciocínio:
+- Impacto no negócio: Nenhum.
+- Afeta funcionalidade essencial? Não.
+- Usuários afetados: Apenas 1.
+Urgência: 1
+
+Exemplo 2:
+Ticket: "O sistema de faturamento está fora do ar para todos os usuários."
+Raciocínio:
+- Impacto no negócio: Alto.
+- Afeta funcionalidade essencial? Sim.
+- Usuários afetados: Todos.
+Urgência: 5
+
+Agora analise:
+Ticket: "O relatório semanal de vendas exportou com os nomes das colunas invertidos."
+Raciocínio:
+"""
+
+
+executar("Exercício 1", prompt_ex1)
+executar("Exercício 2", prompt_ex2)
+executar("Exercício 3", prompt_ex3)
