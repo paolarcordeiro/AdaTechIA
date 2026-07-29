@@ -1,0 +1,144 @@
+
+from google import genai
+
+from google.genai import types, Client
+
+from dotenv import load_dotenv
+
+import os
+
+ 
+
+# carregando variáveis de ambiente
+
+load_dotenv()
+
+ 
+
+api_key: str = os.getenv('API_KEY')
+
+ 
+
+client: Client = genai.Client(api_key=api_key)
+
+modelo: str = "models/gemini-3.1-flash-lite"
+
+ 
+
+prompt_ex1: str = "Organize as informações dos textos fornecidos em json."
+
+review_ex1: str = "O produto funciona bem, mas o manual de instruções poderia ser mais claro. No geral, é razoável."
+
+instrucoes_ex1: str = '''
+
+Você é um padronizador de dados de texto em json.
+
+Utilize o seguinte padrão:
+
+Entrada:
+
+"O prazo de entrega foi cumprido certinho e o produto veio bem embalado. Muito satisfeito com a compra!"
+
+Saída:
+
+{"cliente": "Anônimo", "sentimento": "Positivo", "categoria": "Entrega"}
+
+Entrada:
+
+"Meu nome é Fernanda Lima. A cobrança da mensalidade veio com valor errado de novo, é a segunda vez que isso acontece."
+
+Saída:
+
+{"cliente": "Fernanda Lima", "sentimento": "Negativo", "categoria": "Cobrança"}
+
+'''
+
+ 
+
+prompt_ex2 = """
+
+Considere a seguinte frota de caminhões com carga:
+
+3 caminhões, com capacidade de 10, 15 e 20 toneladas.
+
+Carga A: 8 toneladas, prioridade Alta
+
+Carga B: 12 toneladas, prioridade Média
+
+Carga C: 18 toneladas, prioridade Baixa
+
+Qual a melhor distribuição das cargas entre os caminhões?
+
+"""
+
+instrucoes_ex2: str = """
+
+Você é um especialista em logística.
+
+Explicite seu raciocíno passo-a-passo
+
+"""
+
+ 
+
+prompt_ex3: str = """
+
+Analise a urgência do seguinte ticket: Lentidão na geração do arquivo XYZ no módulo XPTO após atualização da release
+
+"""
+
+ 
+
+instrucoes_ex3: str = """
+
+Classifique o ticket fornecido em urgência de 1 (Baixa) a 5 (Crítica)
+
+Siga exatamente a estrutura de raciocínio mostrada no seguinte exemplo:
+
+Ticket: A importação direta do arquivo XYZ está falhando com erro de processamento
+
+Impacto no negócio: Alto
+
+Afeta funcionalidade essencial? Sim
+
+Usuários afetados: Equipe de Backoffice
+
+Urgência: 4
+
+"""
+
+ 
+
+def gerar_resposta(prompt: str, modelo: str) -> str:
+
+    reposta = client.models.generate_content(
+
+        model=modelo,
+
+        contents=prompt,
+
+        config=types.GenerateContentConfig(
+
+            temperature=0.0,
+
+            system_instruction=instrucoes_ex1
+
+            )
+
+    )
+
+ 
+
+    return reposta.text
+
+ 
+
+resposta = gerar_resposta(prompt_ex1, modelo)
+
+ 
+
+print("resposta:", resposta)
+
+ 
+
+ 
